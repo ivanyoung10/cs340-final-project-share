@@ -28,7 +28,7 @@ CREATE TABLE item (
     description TEXT,
     price MONEY,
     picture TEXT,
-    CHECK(price >= 0)
+    CHECK(price >= 0::money)
 );
 
 CREATE TABLE discount (
@@ -39,7 +39,7 @@ CREATE TABLE discount (
     start_date DATE,
     end_date DATE,
     CHECK(amt >= 0),
-    CONSTRAINT valid_dates CHECK(start_date < end_date),
+    CONSTRAINT valid_dates CHECK(start_date < end_date)
 );
 
 CREATE TABLE user_interests (
@@ -51,7 +51,7 @@ CREATE TABLE user_interests (
 CREATE TABLE user_co_preference (
     user_id INT REFERENCES users(id),
     preference_co_id INT REFERENCES company(id),
-    PRIMARY KEY (id, preference_co_id)
+    PRIMARY KEY (user_id, preference_co_id)
 );
 
 CREATE TABLE user_item_preference (
@@ -127,9 +127,9 @@ CREATE TABLE company_transaction (
     is_paid BOOLEAN DEFAULT FALSE,
     paid_date DATE,
     co_id INT REFERENCES company(id),
-    CONSTRAINT valid_dates CHECK (trxn_date <= paid_date),
-    CONSTRAINT CHECK (paid_date IS NOT NULL AND )
+    CONSTRAINT valid_dates CHECK (trxn_date <= paid_date)
 );
+    -- CONSTRAINT CHECK (paid_date IS NOT NULL AND is_paid IS TRUE)
 
 CREATE TABLE company_transaction_checkin (
     trxn_id INT REFERENCES company_transaction,
