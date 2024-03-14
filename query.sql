@@ -1,172 +1,300 @@
 
-CREATE Table USER_TABLE(
-    user_id char UNIQUE,
-    user_email char,
-    password char,
-    first_name char,
-    last_name char,
-    street_address char,
-    city char,
-    state char,
-    zip_code int,
-    PRIMARY KEY(user_id)
+
+CREATE DATABASE final_project;
+
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(254) UNIQUE,
+    password VARCHAR(32),
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    street_address VARCHAR(95),
+    city VARCHAR(35),
+    state VARCHAR(15),
+    zip_code NUMERIC(9)
 );
 
-INSERT INTO USER_TABLE
-VALUES (1010, 'john@gmail.com', 'password', 'john', 'smith', '123 Jefferson St', 'Bend', 'Oregon', '97701');
+CREATE TABLE company (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact VARCHAR(100),
+    contact_tel NUMERIC(15),
+    contact_email VARCHAR(255),
+    url VARCHAR(255) UNIQUE
+);
 
-INSERT INTO USER_TABLE
-VALUES (1011, 'kate@gmail.com', 'password', 'kate', 'smith', '123 Jefferson St', 'Bend', 'Oregon', '97701');
+CREATE TABLE item (
+    id VARCHAR(255),
+    type VARCHAR(7),
+    name VARCHAR,
+    description TEXT,
+    price MONEY,
+    picture TEXT,
+    CHECK(price >= 0::money),
+    PRIMARY KEY(id)
+);
 
-INSERT INTO USER_TABLE
-VALUES (6, 'travis@gmail.com', 'password', 'travis', 'scott', '903 Aubrey Ln', 'Los Angeles', 'California', '90210');
+CREATE TABLE discount (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(25),
+    amt INT,
+    description TEXT,
+    start_date DATE,
+    end_date DATE,
+    CHECK(amt >= 0),
+    CONSTRAINT valid_dates CHECK(start_date < end_date)
+);
 
-CREATE TABLE USER_INTERESTS(
-    user_id int,
+CREATE TABLE user_interests (
+    id INT REFERENCES users(id),
     interest VARCHAR(255),
-    PRIMARY KEY(interest),
-    FOREIGN KEY(user_id) REFERENCES USER_TABLE(user_id)
+    PRIMARY KEY (id, interest)
 );
 
-CREATE TABLE USER_COMPANY_PREFERENCE(
-    user_id int,
-    preference_company_id int,
-    FOREIGN KEY(user_id) REFERENCES user_table(user_id),
-    FOREIGN KEY(preference_company_id) REFERENCES USER_TABLE(user_id)
+CREATE TABLE user_co_preference (
+    user_id INT REFERENCES users(id),
+    preference_co_id INT REFERENCES company(id),
+    PRIMARY KEY (user_id, preference_co_id)
 );
 
-CREATE TABLE USER_ITEM_PREFERENCE(
-    user_id int,
-    preference_location_city VARCHAR(255),
-    preference_location_state VARCHAR(255),
-    FOREIGN KEY(user_id) REFERENCES USER_TABLE(user_id)
+CREATE TABLE user_item_preference (
+    user_id INT REFERENCES users(id),
+    item_id VARCHAR(255) REFERENCES item(id),
+    PRIMARY KEY (user_id, item_id)
 );
 
-CREATE TABLE COMPANY(
-    company_id int, 
-    company_name VARCHAR(255), 
-    company_contact VARCHAR(255), 
-    company_contact_phone_nbr int,
-    company_contact_email VARCHAR(255), 
-    url VARCHAR(255),
-    PRIMARY KEY(company_id)
+CREATE TABLE user_loc_preference (
+    id INT REFERENCES users(id),
+    city VARCHAR(35),
+    state VARCHAR(15),
+    PRIMARY KEY (id, city, state)
 );
 
-CREATE TABLE COMPANY_LOCATION(
-    company_id int, 
-    location_id int, 
-    street_address VARCHAR(255), 
-    city VARCHAR(255), 
-    state VARCHAR(255), 
-    zip_code int, 
-    phone_nbr int,
-    FOREIGN KEY(company_id) REFERENCES COMPANY(company_id)
+CREATE TABLE company_loc (
+    co_id INT REFERENCES company(id),
+    loc_id SERIAL PRIMARY KEY,
+    street_address VARCHAR(95),
+    city VARCHAR(35),
+    state VARCHAR(15),
+    zip_code NUMERIC(9),
+    tel NUMERIC(16)
 );
 
-CREATE TABLE COMPANY_ITEM(
-company_id int, 
-item_id int, 
-is_discounted VARCHAR(5), 
-discount_id int,
-FOREIGN KEY(company_id) REFERENCES COMPANY(company_id),
-FOREIGN KEY(item_id) REFERENCES ITEM(item_id),
-FOREIGN KEY(discount_id) REFERENCES DISCOUNT(discount_id)
+CREATE TABLE company_item (
+    co_id INT REFERENCES company(id),
+    item_id VARCHAR(255) REFERENCES item(id),
+    is_discounted BOOLEAN DEFAULT FALSE,
+    discount_id INT REFERENCES discount(id),
+    PRIMARY KEY (co_id, item_id)
 );
 
-CREATE TABLE User_Company_Review
-(company_id int, 
-user_id int, 
-rating_score int, 
-comments VARCHAR(255),
-FOREIGN KEY(company_id) REFERENCES COMPANY(company_id),
-FOREIGN KEY(user_id) REFERENCES USER_TABLE(user_id)
+CREATE TABLE user_co_review (
+    co_id INT REFERENCES company(id),
+    user_id INT REFERENCES users(id),
+    rating_score NUMERIC(2,1),
+    comments TEXT,
+    PRIMARY KEY (co_id, user_id),
+    CONSTRAINT valid_rating CHECK (rating_score BETWEEN 1 AND 5)
 );
 
-CREATE TABLE Item(item_id int, 
-item_type VARCHAR(255), 
-item_name VARCHAR(255), 
-item_description VARCHAR(255), 
-item_price float, 
-item_picture int,
-PRIMARY KEY(item_id)
+CREATE TABLE user_checkin (
+    checkin_id SERIAL PRIMARY KEY,
+    checkin_date DATE,
+    user_id INT REFERENCES users(id),
+    co_id INT REFERENCES company(id),
+    item_id VARCHAR(255) REFERENCES item(id),
+    discount_id INT REFERENCES discount(id),
+    UNIQUE (user_id, co_id, item_id, checkin_date)
 );
 
-CREATE TABLE Discount(discount_id int, 
-discount_type VARCHAR(255), 
-discount_amount float, 
-discount_description VARCHAR(255),
-discount_start_date date, 
-discount_end_date date,
-PRIMARY KEY(discount_id)
+CREATE TABLE employee (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(254) UNIQUE,
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    job_category VARCHAR(20),
+    salary MONEY,
+    start_date DATE,
+    street_address VARCHAR(95),
+    city VARCHAR(35),
+    state VARCHAR(15),
+    zip_code NUMERIC(9)
 );
 
-CREATE TABLE User_Checkin (checkin_id int, 
-checkin_date date, 
-user_id int, 
-company_id int, 
-item_id int, 
-discount_id int,
-PRIMARY KEY(checkin_id),
-FOREIGN KEY(user_id) REFERENCES USER_TABLE(user_id),
-FOREIGN KEY(company_id) REFERENCES COMPANY(company_id),
-FOREIGN KEY(item_id) REFERENCES ITEM(item_id),
-FOREIGN KEY(discount_id) REFERENCES Discount(discount_id)
+CREATE TABLE company_transaction (
+    trxn_id SERIAL PRIMARY KEY,
+    trxn_date DATE,
+    charge_type VARCHAR(30),
+    trxn_amt MONEY,
+    surcharge MONEY,
+    is_paid BOOLEAN DEFAULT FALSE,
+    paid_date DATE,
+    co_id INT REFERENCES company(id),
+    CONSTRAINT valid_dates CHECK (trxn_date <= paid_date)
 );
+    -- CONSTRAINT CHECK (paid_date IS NOT NULL AND is_paid IS TRUE)
 
-CREATE TABLE Employee(employee_id int, 
-email VARCHAR(255), 
-first_name VARCHAR(255), 
-last_name VARCHAR(255), 
-job_category VARCHAR(255), 
-salary int, 
-start_date date, 
-street_address VARCHAR(255), 
-city VARCHAR(255), 
-state VARCHAR(255), 
-zip_code int,
-PRIMARY KEY(employee_id)
+CREATE TABLE company_transaction_checkin (
+    trxn_id INT REFERENCES company_transaction,
+    checkin_id INT REFERENCES user_checkin,
+    checkin_charge MONEY,
+    PRIMARY KEY (trxn_id, checkin_id)
 );
+-- END CREATE TABLES
 
-CREATE TABLE Company_Transaction (transaction_id int, 
-transaction_date date, 
-charge_type VARCHAR(255), 
-transaction_amount float,
-surcharge float, 
-total_charge float, 
-is_paid VARCHAR(5), 
-paid_date date, 
-company_id int,
-PRIMARY KEY(transaction_id),
-FOREIGN KEY(company_id) REFERENCES COMPANY(company_id)
+-- Copy data
+drop table temp_users; drop table temp_products; drop table temp_services;
+CREATE TABLE temp_users (
+    id serial PRIMARY KEY,
+    email VARCHAR DEFAULT NULL,
+    password VARCHAR DEFAULT NULL,
+    first_name VARCHAR DEFAULT NULL,
+    last_name VARCHAR DEFAULT NULL,
+    street_address VARCHAR DEFAULT NULL,
+    city VARCHAR DEFAULT NULL,
+    state VARCHAR DEFAULT NULL
 );
+\copy temp_users(first_name, last_name, password, email, street_address, city, state) FROM 'C:\Users\ivany\Downloads\files\files\users.csv'  DELIMITER ',' CSV HEADER
 
-CREATE TABLE Company_Transaction_Checkin (transaction_id int, 
-checkin_id int, 
-checkin_charge float, 
-FOREIGN KEY(transaction_id) REFERENCES Company_Transaction(transaction_id),
-FOREIGN KEY(checkin_id) REFERENCES User_Checkin(checkin_id)
+CREATE TABLE temp_products (
+    id serial PRIMARY KEY,
+    pid VARCHAR DEFAULT NULL,
+    pname VARCHAR DEFAULT NULL,
+    cname VARCHAR DEFAULT NULL,
+    pcategory VARCHAR DEFAULT NULL
 );
+\copy temp_products(pid, pname, cname, pcategory) FROM 'C:\Users\ivany\Downloads\files\files\products.csv' DELIMITER '|' CSV
+
+CREATE TABLE temp_services (
+    id serial PRIMARY KEY,
+    sid VARCHAR DEFAULT NULL,
+    sname VARCHAR DEFAULT NULL,
+    cname VARCHAR DEFAULT NULL,
+    scategory VARCHAR DEFAULT NULL
+);
+\copy temp_services(sid, sname, cname, scategory) FROM 'C:\Users\ivany\Downloads\files\files\services.csv' DELIMITER ',' CSV HEADER
+
+--data cleaning
+
+---user data insertion
+INSERT INTO users (email, first_name, last_name, street_address, city, state) 
+SELECT DISTINCT email, first_name, last_name, street_address, city, state FROM temp_users;
+
+--item data insertion
+INSERT INTO company (name)
+SELECT DISTINCT cname from temp_products
+WHERE cname IS NOT NULL;
+
+INSERT INTO item(id, type, name, description)
+SELECT DISTINCT pid, 'product', pname, pcategory FROM temp_products
+WHERE pid is NOT NULL;
+
+INSERT INTO company_item(co_id, item_id)
+SELECT DISTINCT c.id, t.pid  FROM temp_products as t 
+INNER JOIN company as c on t.cname = c.name
+WHERE t.pid is NOT NULL;
+
+INSERT INTO item(id, type, name, description)
+SELECT DISTINCT sid, 'service', sname, scategory FROM temp_services
+WHERE sid is NOT NULL;
+
+INSERT INTO company_item(co_id, item_id)
+SELECT DISTINCT c.id, t.sid  FROM temp_services as t 
+INNER JOIN company as c on t.cname = c.name
+WHERE t.sid is NOT NULL;
 
 
---Data insertion
-CREATE TEMP TABLE temp_table(item_id VARCHAR(1000));
-\COPY temp_table FROM 'C:\Users\ivany\Downloads\files\files\products.csv' DELIMITER '|'
 
-CREATE TEMP TABLE temp_table_2(column_1 VARCHAR(1000));
-\COPY temp_table_2 FROM 'C:\Users\ivany\Downloads\files\files\services.csv'
 
-CREATE TEMP TABLE temp_table_3(
-    first_name VARCHAR(1000), 
-    last_name VARCHAR(1000), 
-    user_name VARCHAR(1000), 
-    email VARCHAR(1000), 
-    street VARCHAR(1000), 
-    city VARCHAR(1000), 
-    state VARCHAR(1000)) ;
-\COPY temp_table_3 FROM 'C:\Users\ivany\Downloads\files\files\users.csv' DELIMITER ',' CSV
+-- Generate random discount data
+CREATE OR REPLACE PROCEDURE gen_discount() AS $$
+BEGIN
+    WHILE (SELECT count(id) FROM discount) < 20 LOOP
+        WITH choice AS (
+            SELECT '{free, percentage, fixed, other}'::VARCHAR[] a
+        )
+        INSERT INTO discount (type, amt, start_date, end_date)
+        VALUES (
+            (SELECT a[1 + floor((random() * array_length(a, 1)))::int] FROM choice),
+            (SELECT floor(random() * 99)),
+            (SELECT now() - (random() * (interval '3 months'))),
+            (SELECT now() + (random() * (interval '3 months')))
+        );
+    END LOOP;
+END;
+$$ LANGUAGE PLPGSQL;
 
-INSERT INTO user_table(user_email, first_name, last_name, street_address, city, state)
-SELECT email, first_name, last_name, street, city, state FROM temp_table_3;
+-- Triggers
+CREATE OR REPLACE FUNCTION fix_discount_amt() RETURNS trigger AS $$
+BEGIN
+    NEW.amt = 0;
+    RETURN NEW;
+END;
+$$ LANGUAGE PLPGSQL;
+CREATE TRIGGER discount_amt_correction
+BEFORE INSERT OR UPDATE OF type ON discount
+FOR EACH ROW
+WHEN (NEW.type = 'free')
+EXECUTE FUNCTION fix_discount_amt();
+
+CREATE OR REPLACE FUNCTION add_company_contact() RETURNS trigger as $$
+DECLARE
+    users int;
+BEGIN
+    users = SELECT count(id) FROM users;
+    NEW.contact = 
+    NEW.contact_email = SELECT email FROM users WHERE id = (random())
+END;
+$$ LANGUAGE PLPGSQL;
+CREATE TRIGGER new_company
+BEFORE INSERT OF name ON company
+FOR EACH ROW
+EXECUTE FUNCTION add_company_contact();
+
+
+
+
+-- Discount Viewer
+CREATE VIEW discounts_used
+AS SELECT t.day::date, COUNT(id)
+FROM generate_series(
+    timestamp '2023-12-18',
+    timestamp '2024-6-10',
+    interval '1 day'
+) AS t(day)
+INNER JOIN discount as d on t.day BETWEEN d.start_date AND d.end_date
+GROUP by t.day::date
+ORDER by t.day::date ASC;
+
+
+--product list Viewer
+CREATE VIEW products_list
+AS SELECT name, type, price, description, picture
+    FROM item
+    ORDER BY name;
+
+
+
+
+
+
+-- Select random choice from list
+/* WITH choice AS (
+    SELECT '{free, percentage, fixed, other}'::VARCHAR[] a
+)
+SELECT a[1 + floor((random() * array_length(a, 1)))::int] FROM choice; */
+
+
+-- Helper Functions
+-- Get columns
+SELECT column_name FROM information_schema.columns where table_name = 'table_name' order by ordinal_position;
+SELECT column_name, data_type FROM information_schema.columns where table_name = 'users' order by ordinal_position;
+-- Get functions
+SELECT routines.routine_name, parameters.data_type
+FROM information_schema.routines
+    LEFT JOIN information_schema.parameters ON routines.specific_name=parameters.specific_name
+WHERE routines.specific_schema='public'
+ORDER BY routines.routine_name, parameters.ordinal_position;
 
 
 
