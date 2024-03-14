@@ -74,7 +74,7 @@ CREATE TABLE company_loc (
     city VARCHAR(35),
     state VARCHAR(15),
     zip_code NUMERIC(9),
-    tel NUMERIC(16),
+    tel NUMERIC(16)
 );
 
 CREATE TABLE company_item (
@@ -90,7 +90,7 @@ CREATE TABLE user_co_review (
     user_id INT REFERENCES users(id),
     rating_score NUMERIC(2,1),
     comments TEXT,
-    PRIMARY KEY (co_id, user_id)
+    PRIMARY KEY (co_id, user_id),
     CONSTRAINT valid_rating CHECK (rating_score BETWEEN 1 AND 5)
 );
 
@@ -126,8 +126,8 @@ CREATE TABLE company_transaction (
     surcharge MONEY,
     is_paid BOOLEAN DEFAULT FALSE,
     paid_date DATE,
-    co_id INT REFERENCES company(id)
-    CONSTRAINT valid_dates CHECK (trxn_date <= paid_date)
+    co_id INT REFERENCES company(id),
+    CONSTRAINT valid_dates CHECK (trxn_date <= paid_date),
     CONSTRAINT CHECK (paid_date IS NOT NULL AND )
 );
 
